@@ -3736,7 +3736,7 @@ var GasInput = function (_React$Component) {
                 React.createElement(
                     'button',
                     { className: 'input text-subtle' },
-                    'Gas supply'
+                    'Gas'
                 ),
                 React.createElement('input', {
                     id: contractName + '_gas',
@@ -3747,7 +3747,7 @@ var GasInput = function (_React$Component) {
                 React.createElement(
                     'button',
                     { className: 'btn btn-primary' },
-                    'Gas Limit : ',
+                    'Limit: ',
                     gasLimit
                 )
             );
@@ -4137,10 +4137,12 @@ var ContractCompiled = function (_React$Component) {
         _this.helpers = props.helpers;
         _this.state = {
             estimatedGas: 9000000,
-            ContractABI: props.interfaces[props.contractName].interface
+            ContractABI: props.interfaces[props.contractName].interface,
+            savePath: 'filename.abi'
         };
         _this._handleGasChange = _this._handleGasChange.bind(_this);
         _this._handleInput = _this._handleInput.bind(_this);
+        _this._saveABI = _this._saveABI.bind(_this);
         return _this;
     }
 
@@ -4201,6 +4203,11 @@ var ContractCompiled = function (_React$Component) {
             this.props.addInterface({ contractName: contractName, ContractABI: ContractABI });
         }
     }, {
+        key: '_saveABI',
+        value: function _saveABI() {
+            console.log('Will save ABI to path');
+        }
+    }, {
         key: 'render',
         value: function render() {
             var _this2 = this;
@@ -4211,7 +4218,8 @@ var ContractCompiled = function (_React$Component) {
                 index = _props2.index;
             var _state = this.state,
                 estimatedGas = _state.estimatedGas,
-                ContractABI = _state.ContractABI;
+                ContractABI = _state.ContractABI,
+                savePath = _state.savePath;
 
             return React.createElement(
                 'div',
@@ -4248,16 +4256,25 @@ var ContractCompiled = function (_React$Component) {
                                     React.createElement(
                                         'div',
                                         { className: 'btn' },
-                                        'Interface'
+                                        'ABI'
                                     )
                                 ),
                                 React.createElement(
                                     reactTabs.Tab,
                                     null,
                                     React.createElement(
-                                        'div',
-                                        { className: 'btn' },
-                                        'Interface Object'
+                                        'button',
+                                        { className: 'btn icon icon-eye inline-block-tight' },
+                                        'View'
+                                    )
+                                ),
+                                React.createElement(
+                                    reactTabs.Tab,
+                                    null,
+                                    React.createElement(
+                                        'button',
+                                        { className: 'btn icon icon-desktop-download inline-block-tight' },
+                                        'Save'
                                     )
                                 )
                             )
@@ -4283,6 +4300,25 @@ var ContractCompiled = function (_React$Component) {
                                 collapseStringsAfterLength: 32,
                                 iconStyle: 'triangle'
                             })
+                        ),
+                        React.createElement(
+                            reactTabs.TabPanel,
+                            null,
+                            React.createElement(
+                                'div',
+                                { className: 'save-abi' },
+                                React.createElement(
+                                    'button',
+                                    { className: 'btn' },
+                                    'Save as:'
+                                ),
+                                React.createElement('input', { className: 'inputs', value: savePath }),
+                                React.createElement(
+                                    'button',
+                                    { className: 'btn', onClick: this._saveABI },
+                                    'Save'
+                                )
+                            )
                         )
                     )
                 ),
@@ -4652,7 +4688,7 @@ var ContractExecution = function (_React$Component) {
                                     React.createElement(
                                         'div',
                                         { className: 'btn' },
-                                        'Interface'
+                                        'ABI'
                                     )
                                 ),
                                 React.createElement(
@@ -4661,8 +4697,13 @@ var ContractExecution = function (_React$Component) {
                                     React.createElement(
                                         'div',
                                         { className: 'btn' },
-                                        'Interface Object'
+                                        'Tree'
                                     )
+                                ),
+                                React.createElement(
+                                    reactTabs.Tab,
+                                    null,
+                                    React.createElement('span', { className: 'icon icon-desktop-download' })
                                 )
                             )
                         ),
