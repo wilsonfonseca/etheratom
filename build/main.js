@@ -998,8 +998,6 @@ class Web3Helpers {
         payload: input
       });
       solcWorker.on('message', m => {
-        console.log(m);
-
         if (m.compiled) {
           this.store.dispatch({
             type: SET_COMPILED,
@@ -1012,9 +1010,17 @@ class Web3Helpers {
           this.jobs[fileName].successHash = hashId;
           solcWorker.kill();
         } else if (m.sources) {
+          sources[m.sources.cleanURL] = {
+            content: m.sources.content
+          };
+          const input = {
+            language: 'Solidity',
+            sources,
+            settings
+          };
           solcWorker.send({
             command: 'compile',
-            payload: m.sources
+            payload: input
           });
         }
       });
