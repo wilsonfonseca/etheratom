@@ -2,28 +2,29 @@
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
+require('idempotent-babel-polyfill');
 var atom$1 = require('atom');
+var Web3 = _interopDefault(require('web3'));
 var md5 = _interopDefault(require('md5'));
 var atomMessagePanel = require('atom-message-panel');
 var child_process = require('child_process');
+var remixUrlResolver = require('remix-url-resolver');
 require('axios');
 require('valid-url');
 require('fs');
 var React = _interopDefault(require('react'));
+var ReactDOM = _interopDefault(require('react-dom'));
+var reactTabs = require('react-tabs');
 var reactRedux = require('react-redux');
 var PropTypes = _interopDefault(require('prop-types'));
-var ReactJson = _interopDefault(require('react-json-view'));
-var reactTabs = require('react-tabs');
 var reactCollapse = require('react-collapse');
+var ReactJson = _interopDefault(require('react-json-view'));
 var VirtualList = _interopDefault(require('react-tiny-virtual-list'));
-var Web3 = _interopDefault(require('web3'));
 var remixAnalyzer = require('remix-analyzer');
 var CheckboxTree = _interopDefault(require('react-checkbox-tree'));
-var ReactDOM = _interopDefault(require('react-dom'));
 var redux = require('redux');
 var logger = _interopDefault(require('redux-logger'));
 var ReduxThunk = _interopDefault(require('redux-thunk'));
-require('idempotent-babel-polyfill');
 
 class AtomSolidityView {
   constructor() {
@@ -455,9 +456,7 @@ EventEmitter.init = function() {
   this.domain = null;
   if (EventEmitter.usingDomains) {
     // if there is an active domain, then attach to it.
-    if (domain.active && !(this instanceof domain.Domain)) {
-      this.domain = domain.active;
-    }
+    if (domain.active && !(this instanceof domain.Domain)) ;
   }
 
   if (!this._events || this._events === Object.getPrototypeOf(this)._events) {
@@ -932,6 +931,9 @@ const SET_SYNCING = 'set_syncing';
 const SET_MINING = 'set_mining';
 const SET_HASH_RATE = 'set_hash_rate';
 
+const path$1 = require('path');
+
+const fs$1 = require('fs');
 class Web3Helpers {
   constructor(web3, store) {
     this.web3 = web3;
@@ -945,7 +947,23 @@ class Web3Helpers {
     return child_process.fork(`${pkgPath}/lib/web3/worker.js`);
   }
 
+  handleLocal(pathString, filePath) {
+    // if no relative/absolute path given then search in node_modules folder
+    if (pathString && pathString.indexOf('.') !== 0 && pathString.indexOf('/') !== 0) {
+      // return handleNodeModulesImport(pathString, filePath, pathString)
+      return;
+    } else {
+      const o = {
+        encoding: 'UTF-8'
+      };
+      const p = pathString ? path$1.resolve(pathString, filePath) : path$1.resolve(pathString, filePath);
+      const content = fs$1.readFileSync(p, o);
+      return content;
+    }
+  }
+
   async compileWeb3(sources) {
+    console.log(JSON.stringify(sources));
     let fileName = Object.keys(sources).find(key => {
       return /\.sol/.test(key);
     });
@@ -998,6 +1016,8 @@ class Web3Helpers {
         payload: input
       });
       solcWorker.on('message', m => {
+        console.log(m);
+
         if (m.compiled) {
           this.store.dispatch({
             type: SET_COMPILED,
@@ -1021,6 +1041,34 @@ class Web3Helpers {
           solcWorker.send({
             command: 'compile',
             payload: input
+          });
+        } else if (m.path) {
+          console.log(m.path);
+          const urlResolver = new remixUrlResolver.RemixURLResolver();
+          const localFSHandler = [{
+            type: 'local',
+            match: url => {
+              return /(^(?!(?:http:\/\/)|(?:https:\/\/)?(?:www.)?(?:github.com)))(^\/*[\w+-_/]*\/)*?(\w+\.sol)/g.exec(url);
+            },
+            handle: match => {
+              return this.handleLocal(match[2], match[3]);
+            }
+          }];
+          urlResolver.resolve(path$1, localFSHandler).then(_sources => {
+            sources[_sources.cleanURL] = {
+              content: _sources.content
+            };
+            const input = {
+              language: 'Solidity',
+              sources,
+              settings
+            };
+            solcWorker.send({
+              command: 'compile',
+              payload: input
+            });
+          }).catch(e => {
+            console.error(e);
           });
         }
       });
