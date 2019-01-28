@@ -193,14 +193,6 @@ function normalizeArray(parts, allowAboveRoot) {
   return parts;
 }
 
-// Split a filename into [root, dir, basename, ext], unix version
-// 'root' is just a slash, or nothing.
-var splitPathRe =
-    /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/;
-var splitPath = function(filename) {
-  return splitPathRe.exec(filename).slice(1);
-};
-
 // path.resolve([from ...], to)
 // posix version
 function resolve() {
@@ -230,134 +222,7 @@ function resolve() {
   }), !resolvedAbsolute).join('/');
 
   return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
-}
-// path.normalize(path)
-// posix version
-function normalize(path) {
-  var isPathAbsolute = isAbsolute(path),
-      trailingSlash = substr(path, -1) === '/';
-
-  // Normalize the path
-  path = normalizeArray(filter(path.split('/'), function(p) {
-    return !!p;
-  }), !isPathAbsolute).join('/');
-
-  if (!path && !isPathAbsolute) {
-    path = '.';
-  }
-  if (path && trailingSlash) {
-    path += '/';
-  }
-
-  return (isPathAbsolute ? '/' : '') + path;
-}
-// posix version
-function isAbsolute(path) {
-  return path.charAt(0) === '/';
-}
-
-// posix version
-function join() {
-  var paths = Array.prototype.slice.call(arguments, 0);
-  return normalize(filter(paths, function(p, index) {
-    if (typeof p !== 'string') {
-      throw new TypeError('Arguments to path.join must be strings');
-    }
-    return p;
-  }).join('/'));
-}
-
-
-// path.relative(from, to)
-// posix version
-function relative(from, to) {
-  from = resolve(from).substr(1);
-  to = resolve(to).substr(1);
-
-  function trim(arr) {
-    var start = 0;
-    for (; start < arr.length; start++) {
-      if (arr[start] !== '') break;
-    }
-
-    var end = arr.length - 1;
-    for (; end >= 0; end--) {
-      if (arr[end] !== '') break;
-    }
-
-    if (start > end) return [];
-    return arr.slice(start, end - start + 1);
-  }
-
-  var fromParts = trim(from.split('/'));
-  var toParts = trim(to.split('/'));
-
-  var length = Math.min(fromParts.length, toParts.length);
-  var samePartsLength = length;
-  for (var i = 0; i < length; i++) {
-    if (fromParts[i] !== toParts[i]) {
-      samePartsLength = i;
-      break;
-    }
-  }
-
-  var outputParts = [];
-  for (var i = samePartsLength; i < fromParts.length; i++) {
-    outputParts.push('..');
-  }
-
-  outputParts = outputParts.concat(toParts.slice(samePartsLength));
-
-  return outputParts.join('/');
-}
-
-var sep = '/';
-var delimiter = ':';
-
-function dirname(path) {
-  var result = splitPath(path),
-      root = result[0],
-      dir = result[1];
-
-  if (!root && !dir) {
-    // No dirname whatsoever
-    return '.';
-  }
-
-  if (dir) {
-    // It has a dirname, strip trailing slash
-    dir = dir.substr(0, dir.length - 1);
-  }
-
-  return root + dir;
-}
-
-function basename(path, ext) {
-  var f = splitPath(path)[2];
-  // TODO: make this comparison case-insensitive on windows?
-  if (ext && f.substr(-1 * ext.length) === ext) {
-    f = f.substr(0, f.length - ext.length);
-  }
-  return f;
-}
-
-
-function extname(path) {
-  return splitPath(path)[3];
-}
-var path = {
-  extname: extname,
-  basename: basename,
-  dirname: dirname,
-  sep: sep,
-  delimiter: delimiter,
-  relative: relative,
-  join: join,
-  isAbsolute: isAbsolute,
-  normalize: normalize,
-  resolve: resolve
-};
-function filter (xs, f) {
+}function filter (xs, f) {
     if (xs.filter) return xs.filter(f);
     var res = [];
     for (var i = 0; i < xs.length; i++) {
@@ -365,15 +230,6 @@ function filter (xs, f) {
     }
     return res;
 }
-
-// String.prototype.substr - negative index don't work in IE8
-var substr = 'ab'.substr(-1) === 'b' ?
-    function (str, start, len) { return str.substr(start, len) } :
-    function (str, start, len) {
-        if (start < 0) start = str.length + start;
-        return str.substr(start, len);
-    }
-;
 
 function _defineProperty(obj, key, value) {
   if (key in obj) {
@@ -4190,15 +4046,12 @@ class Web3Env {
 
   async setSources(editor) {
     const filePath = editor.getPath();
-    const filename = filePath.replace(/^.*[\\/]/, '');
 
     if (filePath.split('.').pop() == 'sol') {
-      const dir = path.dirname(filePath);
       var sources = {};
-      sources[filename] = {
+      sources[filePath] = {
         content: editor.getText()
-      }; // sources = await combineSource(dir, sources);
-
+      };
       this.store.dispatch({
         type: SET_SOURCES,
         payload: sources
@@ -4208,7 +4061,6 @@ class Web3Env {
 
   async compile(editor) {
     const filePath = editor.getPath(); // Reset redux store
-    // this.store.dispatch({ type: SET_COMPILED, payload: null });
 
     this.store.dispatch({
       type: RESET_COMPILED
