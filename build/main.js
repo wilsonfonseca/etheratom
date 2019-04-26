@@ -2,7 +2,9 @@
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
+require('idempotent-babel-polyfill');
 var atom$1 = require('atom');
+var Web3 = _interopDefault(require('web3'));
 var md5 = _interopDefault(require('md5'));
 var atomMessagePanel = require('atom-message-panel');
 var child_process = require('child_process');
@@ -10,21 +12,19 @@ var axios = _interopDefault(require('axios'));
 var validUrl = _interopDefault(require('valid-url'));
 var fs = _interopDefault(require('fs'));
 var React = _interopDefault(require('react'));
+var ReactDOM = _interopDefault(require('react-dom'));
+var reactTabs = require('react-tabs');
 var reactRedux = require('react-redux');
 var PropTypes = _interopDefault(require('prop-types'));
-var ReactJson = _interopDefault(require('react-json-view'));
-var reactTabs = require('react-tabs');
-var fileSaver = require('file-saver');
 var reactCollapse = require('react-collapse');
+var ReactJson = _interopDefault(require('react-json-view'));
+var fileSaver = require('file-saver');
 var VirtualList = _interopDefault(require('react-tiny-virtual-list'));
-var Web3 = _interopDefault(require('web3'));
 var remixAnalyzer = require('remix-analyzer');
 var CheckboxTree = _interopDefault(require('react-checkbox-tree'));
-var ReactDOM = _interopDefault(require('react-dom'));
 var redux = require('redux');
 var logger = _interopDefault(require('redux-logger'));
 var ReduxThunk = _interopDefault(require('redux-thunk'));
-require('idempotent-babel-polyfill');
 
 class AtomSolidityView {
   constructor() {
@@ -36,33 +36,40 @@ class AtomSolidityView {
     let resizeNode = document.createElement('div');
     resizeNode.onmousedown = this.handleMouseDown.bind(this);
     resizeNode.classList.add('etheratom-panel-resize-handle');
-    resizeNode.setAttribute('ref', 'resizehandle');
+    resizeNode.setAttribute('ref', 'resizehandle'); // making the resizeNode Height full of window height
+    // const vheight = window.innerWidth;
+    // resizeNode.style.height = vheight+'px';
+
     this.element.appendChild(resizeNode);
     let mainNode = document.createElement('div');
     mainNode.classList.add('etheratom');
     mainNode.classList.add('native-key-bindings');
-    mainNode.setAttribute('tabindex', '-1');
+    mainNode.setAttribute('tabindex', '-1'); // ADD UPPER SECTION DIV TO WRAP UPPSECTION'S ELEMENTS
+
+    let upperSection = document.createElement('div');
+    upperSection.classList.add('etheratom_uppersection');
+    mainNode.appendChild(upperSection);
     let message = document.createElement('div');
     message.textContent = 'Etheratom IDE';
     message.classList.add('compiler-info');
     message.classList.add('block');
     message.classList.add('highlight-info');
-    mainNode.appendChild(message);
+    upperSection.appendChild(message);
     let compilerNode = document.createElement('div');
     att = document.createAttribute('id');
     att.value = 'client-options';
     compilerNode.setAttributeNode(att);
-    mainNode.appendChild(compilerNode);
+    upperSection.appendChild(compilerNode);
     let versionNode = document.createElement('div');
     att = document.createAttribute('id');
     att.value = 'version_selector';
     versionNode.setAttributeNode(att);
-    mainNode.appendChild(versionNode);
+    upperSection.appendChild(versionNode);
     let accountsNode = document.createElement('div');
     att = document.createAttribute('id');
     att.value = 'accounts-list';
     accountsNode.setAttributeNode(att);
-    mainNode.appendChild(accountsNode);
+    upperSection.appendChild(accountsNode);
     let buttonNode = document.createElement('div');
     att = document.createAttribute('id');
     att.value = 'common-buttons';
@@ -74,7 +81,7 @@ class AtomSolidityView {
     compileButton.setAttributeNode(att);
     compileButton.classList.add('inline-block');
     buttonNode.appendChild(compileButton);
-    mainNode.appendChild(buttonNode);
+    upperSection.appendChild(buttonNode);
     let tabNode = document.createElement('div');
     att = document.createAttribute('id');
     att.value = 'tab_view';
@@ -94,6 +101,15 @@ class AtomSolidityView {
     this.dispose = this.dispose.bind(this);
     this.getElement = this.getElement.bind(this);
     this.destroy = this.destroy.bind(this);
+    window.alert();
+    let etheratom_uppersection = document.getElementsByClassName('etheratom_uppersection');
+    let etheratom_uppersection_height = etheratom_uppersection.clientHeight;
+    console.log(etheratom_uppersection.length);
+
+    for (let x = 0; x < etheratom_uppersection.length; x++) {
+      console.log('HURRAY');
+      console.log(etheratom_uppersection[x]);
+    }
   }
 
   handleMouseDown(e) {
@@ -461,9 +477,7 @@ EventEmitter.init = function() {
   this.domain = null;
   if (EventEmitter.usingDomains) {
     // if there is an active domain, then attach to it.
-    if (domain.active && !(this instanceof domain.Domain)) {
-      this.domain = domain.active;
-    }
+    if (domain.active && !(this instanceof domain.Domain)) ;
   }
 
   if (!this._events || this._events === Object.getPrototypeOf(this)._events) {
@@ -1759,10 +1773,10 @@ function isObject(arg) {
 // If obj.hasOwnProperty has been overridden, then calling
 // obj.hasOwnProperty(prop) will break.
 // See: https://github.com/joyent/node/issues/1707
-function hasOwnProperty$1(obj, prop) {
+function hasOwnProperty(obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
-var isArray$1 = Array.isArray || function (xs) {
+var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 function stringifyPrimitive(v) {
@@ -1791,7 +1805,7 @@ function stringify (obj, sep, eq, name) {
   if (typeof obj === 'object') {
     return map$1(objectKeys(obj), function(k) {
       var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
-      if (isArray$1(obj[k])) {
+      if (isArray(obj[k])) {
         return map$1(obj[k], function(v) {
           return ks + encodeURIComponent(stringifyPrimitive(v));
         }).join(sep);
@@ -1862,9 +1876,9 @@ function parse(qs, sep, eq, options) {
     k = decodeURIComponent(kstr);
     v = decodeURIComponent(vstr);
 
-    if (!hasOwnProperty$1(obj, k)) {
+    if (!hasOwnProperty(obj, k)) {
       obj[k] = v;
-    } else if (isArray$1(obj[k])) {
+    } else if (isArray(obj[k])) {
       obj[k].push(v);
     } else {
       obj[k] = [obj[k], v];
@@ -1881,7 +1895,7 @@ var url = {
   resolveObject: urlResolveObject,
   format: urlFormat,
   Url: Url
-}
+};
 function Url() {
   this.protocol = null;
   this.slashes = null;
@@ -2217,7 +2231,7 @@ function parse$1(self, url, parseQueryString, slashesDenoteHost) {
   }
 
   // finally, reconstruct the href based on what has been validated.
-  self.href = format$1(self);
+  self.href = format(self);
   return self;
 }
 
@@ -2228,10 +2242,10 @@ function urlFormat(obj) {
   // this way, you can call url_format() on strings
   // to clean up potentially wonky urls.
   if (isString(obj)) obj = parse$1({}, obj);
-  return format$1(obj);
+  return format(obj);
 }
 
-function format$1(self) {
+function format(self) {
   var auth = self.auth || '';
   if (auth) {
     auth = encodeURIComponent(auth);
@@ -2288,7 +2302,7 @@ function format$1(self) {
 }
 
 Url.prototype.format = function() {
-  return format$1(this);
+  return format(this);
 };
 
 function urlResolve(source, relative) {
@@ -2590,10 +2604,10 @@ function parseHost(self) {
   if (host) self.hostname = host;
 }
 
-async function handleGithubCall(fullpath, repoPath, path$$1, filename, fileRoot) {
+async function handleGithubCall(fullpath, repoPath, path, filename, fileRoot) {
   return await axios({
     method: 'get',
-    url: 'https://api.github.com/repos/' + repoPath + '/contents/' + path$$1,
+    url: 'https://api.github.com/repos/' + repoPath + '/contents/' + path,
     responseType: 'json'
   }).then(function (response) {
     if ('content' in response.data) {
@@ -4905,7 +4919,7 @@ class TabView extends React.Component {
       onSelect: index => this._handleTabSelect(index),
       className: "react-tabs vertical-tabs"
     }, React.createElement(reactTabs.TabList, {
-      className: "react-tabs__tab-list vertical tablist"
+      className: "react-tabs__tab-list vertical tablist etheratom_sidetabs"
     }, React.createElement("div", {
       className: "tab_btns"
     }, React.createElement(reactTabs.Tab, null, React.createElement("div", {
