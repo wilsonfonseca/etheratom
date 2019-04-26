@@ -95,14 +95,25 @@ class AtomSolidityView {
     mainNode.appendChild(errorNode); // Finally append mainNode to element
 
     this.element.appendChild(mainNode);
+    let height = upperSection.offsetHeight;
+    window.alert(height);
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseMove = this.handleMouseMove.bind(this);
     this.handleMouseUp = this.handleMouseUp.bind(this);
     this.dispose = this.dispose.bind(this);
     this.getElement = this.getElement.bind(this);
     this.destroy = this.destroy.bind(this);
-    window.alert();
+
+    window.onload = function () {
+      console.log('HURRAY WINDOW IS LOADED');
+    };
+
     let etheratom_uppersection = document.getElementsByClassName('etheratom_uppersection');
+
+    etheratom_uppersection.onload = function () {
+      console.log('HUrrauy Hurray');
+    };
+
     let etheratom_uppersection_height = etheratom_uppersection.clientHeight;
     console.log(etheratom_uppersection.length);
 
