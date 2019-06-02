@@ -9,6 +9,7 @@ const external = Object.keys(pkg.dependencies || {});
 external.push('atom');
 external.push('fs');
 external.push('child_process');
+external.push('remix-plugin');
 
 export default {
     input: 'index.js',

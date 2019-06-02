@@ -1,6 +1,5 @@
-'use babel'
 import 'idempotent-babel-polyfill';
-import { Etheratom } from './lib/ethereum-interface';
+import { Etheratom } from './src';
 
 module.exports = new Etheratom({
     config: atom.config,
